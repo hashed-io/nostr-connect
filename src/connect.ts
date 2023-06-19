@@ -233,6 +233,7 @@ export class Connect {
     return eventWithSig as Event;
   }
 
+
   async describe(): Promise<string[]> {
     if (!this.target) throw new Error('Not connected');
 
@@ -288,11 +289,31 @@ export class Connect {
   }
 
   nip04 = {
-    encrypt: async (_pubkey: string, _plaintext: string): Promise<string> => {
-      throw new Error('Not implemented');
+    encrypt: async (pubkey: string, plaintext: string): Promise<string> => {
+      if (!this.target) throw new Error('Not connected');
+
+      const ciphertext = await this.rpc.call({
+        target: this.target,
+        request: {
+          method: 'nip04_encrypt',
+          params: [pubkey, plaintext],
+        },
+      });
+
+      return ciphertext;
     },
-    decrypt: async (_pubkey: string, _ciphertext: string): Promise<string> => {
-      throw new Error('Not implemented');
+    decrypt: async (pubkey: string, ciphertext: string): Promise<string> => {
+      if (!this.target) throw new Error('Not connected');
+
+      const plaintext = await this.rpc.call({
+        target: this.target,
+        request: {
+          method: 'nip04_decrypt',
+          params: [pubkey, ciphertext],
+        },
+      });
+
+      return plaintext;
     },
   };
 }

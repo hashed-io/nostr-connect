@@ -13,6 +13,8 @@ import {
   verifySignature,
 } from 'nostr-tools';
 
+import {NOSTR_CONNECT_KIND} from './interfaces'
+
 export interface NostrRPCRequest {
   id: string;
   method: string;
@@ -65,7 +67,7 @@ export class NostrRPC {
     return new Promise<void>(async (resolve, reject) => {
       const sub = relay.sub([
         {
-          kinds: [24133],
+          kinds: [NOSTR_CONNECT_KIND],
           authors: [target],
           '#p': [this.self.pubkey],
           limit: 1,
@@ -116,7 +118,7 @@ export class NostrRPC {
 
     const sub = relay.sub([
       {
-        kinds: [24133],
+        kinds: [NOSTR_CONNECT_KIND],
         '#p': [this.self.pubkey],
         since: now(),
       } as Filter,
@@ -223,7 +225,7 @@ export async function prepareEvent(
   const cipherText = await nip04.encrypt(secretKey, pubkey, content);
 
   const event: Event = {
-    kind: 24133,
+    kind: NOSTR_CONNECT_KIND,
     created_at: now(),
     pubkey: getPublicKey(secretKey),
     tags: [['p', pubkey]],
