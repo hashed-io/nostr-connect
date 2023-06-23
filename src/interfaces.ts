@@ -1,3 +1,16 @@
-import {Kind} from 'nostr-tools'
 
-export const NOSTR_CONNECT_KIND = 24133 as Kind
+export interface NostrRPCRequest {
+  id: string;
+  method: string;
+  params: any[];
+}
+export interface NostrRPCResponse {
+  id: string;
+  result: any;
+  error: any;
+}
+
+export interface RequestOpts {
+  skipResponse?: boolean;
+  timeout?: number
+}

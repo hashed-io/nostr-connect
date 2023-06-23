@@ -1,5 +1,5 @@
 {
-  "version": "0.4.1",
+  "version": "0.4.2",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -34,7 +34,7 @@
     "trailingComma": "es5"
   },
   "name": "@smontero/nostr-connect",
-  "author": "tiero",
+  "author": "smontero",
   "module": "dist/connect.esm.js",
   "size-limit": [
     {
@@ -61,6 +61,6 @@
   },
   "dependencies": {
     "events": "^3.3.0",
-    "nostr-tools": "^1.7.4"
+    "nostr-tools": "1.12.0"
   }
 }

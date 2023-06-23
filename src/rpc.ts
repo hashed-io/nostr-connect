@@ -1,30 +1,33 @@
 import EventEmitter from 'events';
+
 import {
-  Event,
-  Filter,
-  getEventHash,
-  getPublicKey,
   nip04,
-  Relay,
-  relayInit,
-  signEvent,
-  Sub,
-  validateEvent,
-  verifySignature,
 } from 'nostr-tools';
 
-import {NOSTR_CONNECT_KIND} from './interfaces'
+import {
+  Event,
+  getEventHash,
+  validateEvent,
+  verifySignature,
+  getSignature,
+} from 'nostr-tools/lib/event';
 
-export interface NostrRPCRequest {
-  id: string;
-  method: string;
-  params: any[];
-}
-export interface NostrRPCResponse {
-  id: string;
-  result: any;
-  error: any;
-}
+import {
+  Filter,
+} from 'nostr-tools/lib/filter';
+
+import {
+  getPublicKey
+} from 'nostr-tools/lib/keys';
+
+import {
+  Relay,
+  relayInit,
+  Sub,
+} from 'nostr-tools/lib/relay';
+
+import { Kinds } from './constants'
+import { NostrRPCRequest, NostrRPCResponse, RequestOpts } from './interfaces';
 
 export class NostrRPC {
   relay: string;
@@ -55,7 +58,7 @@ export class NostrRPC {
         params?: any[];
       };
     },
-    opts?: { skipResponse?: boolean; timeout?: number }
+    opts?: RequestOpts
   ): Promise<any> {
     // connect to relay
     const relay = await connectToRelay(this.relay);
@@ -67,7 +70,7 @@ export class NostrRPC {
     return new Promise<void>(async (resolve, reject) => {
       const sub = relay.sub([
         {
-          kinds: [NOSTR_CONNECT_KIND],
+          kinds: [Kinds.NOSTR_CONNECT],
           authors: [target],
           '#p': [this.self.pubkey],
           limit: 1,
@@ -118,7 +121,7 @@ export class NostrRPC {
 
     const sub = relay.sub([
       {
-        kinds: [NOSTR_CONNECT_KIND],
+        kinds: [Kinds.NOSTR_CONNECT],
         '#p': [this.self.pubkey],
         since: now(),
       } as Filter,
@@ -225,7 +228,7 @@ export async function prepareEvent(
   const cipherText = await nip04.encrypt(secretKey, pubkey, content);
 
   const event: Event = {
-    kind: NOSTR_CONNECT_KIND,
+    kind: Kinds.NOSTR_CONNECT,
     created_at: now(),
     pubkey: getPublicKey(secretKey),
     tags: [['p', pubkey]],
@@ -235,7 +238,7 @@ export async function prepareEvent(
   };
 
   const id = getEventHash(event);
-  const sig = signEvent(event, secretKey);
+  const sig = getSignature(event, secretKey);
 
   const signedEvent = { ...event, id, sig };
   const ok = validateEvent(signedEvent);

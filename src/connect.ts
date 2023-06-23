@@ -1,8 +1,23 @@
 import EventEmitter from 'events';
-import { Event, getPublicKey, nip04, Kind } from 'nostr-tools';
+import { nip04 } from 'nostr-tools';
+
+import {
+  Event,
+  Kind,
+} from 'nostr-tools/lib/event';
+
+import {
+  getPublicKey
+} from 'nostr-tools/lib/keys';
+
+
+
+
 import { nip26 } from 'nostr-tools';
+import { ConnectMethods } from './constants';
 
 import { isValidRequest, NostrRPC } from './rpc';
+import { RequestOpts } from './interfaces';
 
 export interface Metadata {
   name: string;
@@ -84,7 +99,7 @@ export class ConnectURI {
       {
         target: this.target,
         request: {
-          method: 'connect',
+          method: ConnectMethods.CONNECT,
           params: [getPublicKey(secretKey)],
         },
       },
@@ -101,7 +116,7 @@ export class ConnectURI {
       {
         target: this.target,
         request: {
-          method: 'disconnect',
+          method: ConnectMethods.DISCONNECT,
           params: [],
         },
       },
@@ -151,7 +166,7 @@ export class Connect {
       if (!isValidRequest(payload)) return;
 
       switch (payload.method) {
-        case 'connect': {
+        case ConnectMethods.CONNECT: {
           if (!payload.params || payload.params.length !== 1)
             throw new Error('connect: missing pubkey');
           const [pubkey] = payload.params;
@@ -159,7 +174,7 @@ export class Connect {
           this.events.emit('connect', pubkey);
           break;
         }
-        case 'disconnect': {
+        case ConnectMethods.DISCONNECT: {
           this.target = undefined;
           this.events.emit('disconnect');
           break;
@@ -176,21 +191,28 @@ export class Connect {
     this.events.off(evt, cb);
   }
 
-  async disconnect(): Promise<void> {
-    if (!this.target) throw new Error('Not connected');
+  isConnected(): boolean {
+    return !this.target
+  }
 
+  assertIsConnected() {
+    this.getTarget()
+  }
+
+  getTarget(): string {
+    if (!this.target) throw new Error('Not connected');
+    return this.target
+  }
+
+  async disconnect(): Promise<void> {
+    this.assertIsConnected()
     // notify the UI that we are disconnecting
     this.events.emit('disconnect');
 
     try {
-      await this.rpc.call(
-        {
-          target: this.target,
-          request: {
-            method: 'disconnect',
-            params: [],
-          },
-        },
+      await this.request(
+        ConnectMethods.DISCONNECT,
+        [],
         { skipResponse: true }
       );
     } catch (error) {
@@ -201,16 +223,10 @@ export class Connect {
   }
 
   async getPublicKey(): Promise<string> {
-    if (!this.target) throw new Error('Not connected');
-
-    const response = await this.rpc.call({
-      target: this.target,
-      request: {
-        method: 'get_public_key',
-        params: [],
-      },
-    });
-    return response as string;
+    return this.request(
+      ConnectMethods.GET_PUBLIC_KEY,
+      [],
+    );
   }
 
   async signEvent(event: {
@@ -220,31 +236,25 @@ export class Connect {
     content: string;
     created_at: number;
   }): Promise<Event> {
-    if (!this.target) throw new Error('Not connected');
+    return this.request(
+      ConnectMethods.SIGN_EVENT,
+      [event],
+    );
+  }
 
-    const eventWithSig = await this.rpc.call({
-      target: this.target,
-      request: {
-        method: 'sign_event',
-        params: [event],
-      },
-    });
-
-    return eventWithSig as Event;
+  async signPSBT(psbt: string, descriptor: string, network: string): Promise<string> {
+    return this.request(
+      ConnectMethods.SIGN_PSBT,
+      [psbt, descriptor, network],
+    );
   }
 
 
   async describe(): Promise<string[]> {
-    if (!this.target) throw new Error('Not connected');
-
-    const response = await this.rpc.call({
-      target: this.target,
-      request: {
-        method: 'describe',
-        params: [],
-      },
-    });
-    return response as string[];
+    return this.request(
+      ConnectMethods.DESCRIBE,
+      [],
+    );
   }
 
   async delegate(
@@ -255,8 +265,6 @@ export class Connect {
       since?: number | TimeRanges;
     }
   ): Promise<nip26.Delegation> {
-    if (!this.target) throw new Error('Not connected');
-
     if (conditions.until && typeof conditions.until !== 'number') {
       if (!Object.keys(TimeRangeToUnix).includes(conditions.until))
         throw new Error(
@@ -272,14 +280,10 @@ export class Connect {
       conditions.since = TimeRangeToUnix[conditions.since];
     }
 
-    const delegation = await this.rpc.call({
-      target: this.target,
-      request: {
-        method: 'delegate',
-        params: [delegatee, conditions],
-      },
-    });
-    return delegation as nip26.Delegation;
+    return this.request(
+      ConnectMethods.DELEGATE,
+      [delegatee, conditions],
+    );
   }
 
   async getRelays(): Promise<{
@@ -290,30 +294,28 @@ export class Connect {
 
   nip04 = {
     encrypt: async (pubkey: string, plaintext: string): Promise<string> => {
-      if (!this.target) throw new Error('Not connected');
-
-      const ciphertext = await this.rpc.call({
-        target: this.target,
-        request: {
-          method: 'nip04_encrypt',
-          params: [pubkey, plaintext],
-        },
-      });
-
-      return ciphertext;
+      return this.request(
+        ConnectMethods.NIP04_ENCRYPT,
+        [pubkey, plaintext],
+      );
     },
     decrypt: async (pubkey: string, ciphertext: string): Promise<string> => {
-      if (!this.target) throw new Error('Not connected');
-
-      const plaintext = await this.rpc.call({
-        target: this.target,
-        request: {
-          method: 'nip04_decrypt',
-          params: [pubkey, ciphertext],
-        },
-      });
-
-      return plaintext;
+      return this.request(
+        ConnectMethods.NIP04_DECRYPT,
+        [pubkey, ciphertext],
+      );
     },
   };
+
+  private async request(method: string, params: any[], opts?: RequestOpts): Promise<any> {
+    const target = this.getTarget()
+    return this.rpc.call({
+      target,
+      request: {
+        method,
+        params,
+      }
+    },
+      opts);
+  }
 }
