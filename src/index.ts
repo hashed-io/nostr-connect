@@ -1,3 +1,4 @@
 export * from './connect';
-export * from './rpc';
+export * from './constants'
 export * from './nostr';
+export * from './rpc';
