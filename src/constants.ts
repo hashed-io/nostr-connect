@@ -1,6 +1,6 @@
 import {
   Kind,
-} from 'nostr-tools/lib/event';
+} from 'nostr-tools';
 
 export const Kinds ={
     NOSTR_CONNECT: 24133 as Kind

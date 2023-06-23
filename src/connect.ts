@@ -1,19 +1,12 @@
 import EventEmitter from 'events';
-import { nip04 } from 'nostr-tools';
-
 import {
   Event,
   Kind,
-} from 'nostr-tools/lib/event';
+  getPublicKey,
+  nip04,
+  nip26
+} from 'nostr-tools';
 
-import {
-  getPublicKey
-} from 'nostr-tools/lib/keys';
-
-
-
-
-import { nip26 } from 'nostr-tools';
 import { ConnectMethods } from './constants';
 
 import { isValidRequest, NostrRPC } from './rpc';

@@ -1,30 +1,18 @@
 import EventEmitter from 'events';
 
 import {
-  nip04,
-} from 'nostr-tools';
-
-import {
   Event,
   getEventHash,
   validateEvent,
   verifySignature,
-  getSignature,
-} from 'nostr-tools/lib/event';
-
-import {
+  signEvent,
+  nip04,
   Filter,
-} from 'nostr-tools/lib/filter';
-
-import {
-  getPublicKey
-} from 'nostr-tools/lib/keys';
-
-import {
+  getPublicKey,
   Relay,
   relayInit,
   Sub,
-} from 'nostr-tools/lib/relay';
+} from 'nostr-tools';
 
 import { Kinds } from './constants'
 import { NostrRPCRequest, NostrRPCResponse, RequestOpts } from './interfaces';
@@ -238,7 +226,7 @@ export async function prepareEvent(
   };
 
   const id = getEventHash(event);
-  const sig = getSignature(event, secretKey);
+  const sig = signEvent(event, secretKey);
 
   const signedEvent = { ...event, id, sig };
   const ok = validateEvent(signedEvent);
