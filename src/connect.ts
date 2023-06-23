@@ -185,7 +185,7 @@ export class Connect {
   }
 
   isConnected(): boolean {
-    return !this.target
+    return !!this.target
   }
 
   assertIsConnected() {
