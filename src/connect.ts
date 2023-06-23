@@ -235,10 +235,14 @@ export class Connect {
     );
   }
 
-  async signPSBT(psbt: string, descriptor: string, network: string): Promise<string> {
+  async signPSBT(network: string, psbt: string, descriptor?: string): Promise<string> {
+    const params = [network, psbt]
+    if(descriptor){
+      params.push(descriptor)
+    }
     return this.request(
       ConnectMethods.SIGN_PSBT,
-      [psbt, descriptor, network],
+      params
     );
   }
 
