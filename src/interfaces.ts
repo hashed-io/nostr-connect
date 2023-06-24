@@ -12,5 +12,10 @@ export interface NostrRPCResponse {
 
 export interface RequestOpts {
   skipResponse?: boolean;
-  timeout?: number
+  timeout?: number;
+}
+
+export interface SignPSBTResponse {
+  psbt: string;
+  finalized: boolean;
 }

@@ -10,7 +10,7 @@ import {
 import { ConnectMethods } from './constants';
 
 import { isValidRequest, NostrRPC } from './rpc';
-import { RequestOpts } from './interfaces';
+import { RequestOpts, SignPSBTResponse } from './interfaces';
 
 export interface Metadata {
   name: string;
@@ -235,7 +235,7 @@ export class Connect {
     );
   }
 
-  async signPSBT(network: string, psbt: string, descriptor?: string): Promise<string> {
+  async signPSBT(network: string, psbt: string, descriptor?: string): Promise<SignPSBTResponse> {
     const params = [network, psbt]
     if(descriptor){
       params.push(descriptor)
