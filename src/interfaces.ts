@@ -14,8 +14,3 @@ export interface RequestOpts {
   skipResponse?: boolean;
   timeout?: number;
 }
-
-export interface SignPSBTResponse {
-  psbt: string;
-  finalized: boolean;
-}

@@ -1343,6 +1343,11 @@
     "@size-limit/esbuild" "8.1.0"
     "@size-limit/file" "8.1.0"
 
+"@smontero/nostr-ual-common@0.0.1":
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/@smontero/nostr-ual-common/-/nostr-ual-common-0.0.1.tgz#166d0254597071d399aff7d6402c5f4da3c010f6"
+  integrity sha512-jC+fWtYq3eeX+ihlFGzRBStcLvBSD/aJ4Lqv0HFuHk2eMw2iWFuyy89U+ewKbGZhNSG5swoQopKspgPg+5RXww==
+
 "@types/babel__core@^7.1.7":
   version "7.1.20"
   resolved "https://registry.yarnpkg.com/@types/babel__core/-/babel__core-7.1.20.tgz#e168cdd612c92a2d335029ed62ac94c95b362359"

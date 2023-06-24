@@ -6,11 +6,12 @@ import {
   nip04,
   nip26
 } from 'nostr-tools';
+import {SignPSBTResponse} from '@smontero/nostr-ual-common'
 
 import { ConnectMethods } from './constants';
 
 import { isValidRequest, NostrRPC } from './rpc';
-import { RequestOpts, SignPSBTResponse } from './interfaces';
+import { RequestOpts } from './interfaces';
 
 export interface Metadata {
   name: string;
