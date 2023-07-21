@@ -48,6 +48,7 @@
   ],
   "devDependencies": {
     "@size-limit/preset-small-lib": "^8.1.0",
+    "@smontero/tsdx": "0.14.3",
     "@types/node": "^18.11.18",
     "@types/react": "^18.0.26",
     "@types/react-dom": "^18.0.10",
@@ -61,7 +62,6 @@
   "dependencies": {
     "@scure/bip39": "^1.2.1",
     "@smontero/nostr-ual-common": "0.0.1",
-    "@smontero/tsdx": "0.14.3",
     "events": "^3.3.0",
     "nostr-tools": "1.13.0"
   }
