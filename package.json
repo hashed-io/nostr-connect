@@ -59,6 +59,7 @@
     "typescript": "5.1.6"
   },
   "dependencies": {
+    "@scure/bip39": "^1.2.1",
     "@smontero/nostr-ual-common": "0.0.1",
     "@smontero/tsdx": "0.14.3",
     "events": "^3.3.0",
