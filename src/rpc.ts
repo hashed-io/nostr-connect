@@ -5,7 +5,7 @@ import {
   getEventHash,
   validateEvent,
   verifySignature,
-  signEvent,
+  getSignature,
   nip04,
   Filter,
   getPublicKey,
@@ -226,7 +226,7 @@ export async function prepareEvent(
   };
 
   const id = getEventHash(event);
-  const sig = signEvent(event, secretKey);
+  const sig = getSignature(event, secretKey);
 
   const signedEvent = { ...event, id, sig };
   const ok = validateEvent(signedEvent);
