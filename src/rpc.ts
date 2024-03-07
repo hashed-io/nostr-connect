@@ -26,12 +26,18 @@ export class NostrRPC {
   // events
   events = new EventEmitter();
 
+  relayCallConnection: Relay | undefined;
+  relayListenConnection: Relay | undefined;
+
   constructor(opts: { relay?: string; secretKey: string }) {
     this.relay = opts.relay || 'wss://nostr.vulpem.com';
     this.self = {
       pubkey: getPublicKey(opts.secretKey),
       secret: opts.secretKey,
     };
+    this.relayCallConnection = undefined;
+    this.relayListenConnection = undefined;
+
   }
 
   async call(
@@ -49,12 +55,13 @@ export class NostrRPC {
     opts?: RequestOpts
   ): Promise<any> {
     // connect to relay
-    const relay = await connectToRelay(this.relay);
+    const relay: Relay = this.relayCallConnection || await connectToRelay(this.relay);
+    if (relay.status !== 1) await relay.connect();
+    if (!this.relayCallConnection) this.relayCallConnection = relay;
 
     // prepare request to be sent
     const request = prepareRequest(id, method, params);
     const event = await prepareEvent(this.self.secret, target, request);
-
     return new Promise<void>(async (resolve, reject) => {
       const sub = relay.sub([
         {
@@ -62,13 +69,17 @@ export class NostrRPC {
           authors: [target],
           '#p': [this.self.pubkey],
           limit: 1,
+          since: now(),
         } as Filter,
       ]);
 
       await broadcastToRelay(relay, event, true);
 
       // skip waiting for response from remote
-      if (opts && opts.skipResponse === true) resolve();
+      if (opts && opts.skipResponse === true) {
+        sub.unsub();
+        resolve();
+      }
 
       sub.on('event', async (event: Event) => {
         let payload;
@@ -93,11 +104,13 @@ export class NostrRPC {
 
         // if the response is an error, reject the promise
         if (payload.error) {
+          sub.unsub();
           reject(payload.error);
         }
 
         // if the response is a result, resolve the promise
         if (payload.result) {
+          sub.unsub();
           resolve(payload.result);
         }
       });
@@ -105,8 +118,9 @@ export class NostrRPC {
   }
 
   async listen(): Promise<Sub> {
-    const relay = await connectToRelay(this.relay);
-
+    const relay = this.relayListenConnection || await connectToRelay(this.relay);
+    if (relay.status !== 1) await relay.connect();
+    if (!this.relayListenConnection) this.relayListenConnection = relay;
     const sub = relay.sub([
       {
         kinds: [Kinds.NOSTR_CONNECT],
@@ -180,6 +194,18 @@ export class NostrRPC {
       error,
     };
   }
+
+  async disconnectRelays(): Promise<void> {
+    if (this.relayCallConnection) {
+      this.relayCallConnection.close();
+      this.relayCallConnection = undefined;
+    }
+    if (this.relayListenConnection) {
+      this.relayListenConnection.close();
+      this.relayListenConnection = undefined;
+    }
+  }
+
 }
 
 export function now(): number {
@@ -266,7 +292,7 @@ export function isValidResponse(payload: any): boolean {
   return true;
 }
 
-export async function connectToRelay(realayURL: string) {
+export async function connectToRelay(realayURL: string): Promise<Relay> {
   const relay = relayInit(realayURL);
   await relay.connect();
   await new Promise<void>((resolve, reject) => {

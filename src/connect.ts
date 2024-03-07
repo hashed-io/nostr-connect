@@ -6,7 +6,7 @@ import {
   nip04,
   nip26
 } from 'nostr-tools';
-import {SignPSBTResponse} from '@smontero/nostr-ual-common'
+import { SignPSBTResponse } from '@smontero/nostr-ual-common'
 
 import { ConnectMethods } from './constants';
 
@@ -169,8 +169,11 @@ export class Connect {
           break;
         }
         case ConnectMethods.DISCONNECT: {
-          this.target = undefined;
-          this.events.emit('disconnect');
+          if (this.target) {
+            await this.disconnectRelays();
+            this.target = undefined;
+            this.events.emit('disconnect');
+          }
           break;
         }
         default:
@@ -209,10 +212,10 @@ export class Connect {
         [],
         { skipResponse: true }
       );
+      await this.disconnectRelays();
     } catch (error) {
       throw new Error('Failed to disconnect');
     }
-
     this.target = undefined;
   }
 
@@ -238,7 +241,7 @@ export class Connect {
 
   async signPSBT(network: string, psbt: string, descriptor?: string): Promise<SignPSBTResponse> {
     const params = [network, psbt]
-    if(descriptor){
+    if (descriptor) {
       params.push(descriptor)
     }
     return this.request(
@@ -304,6 +307,10 @@ export class Connect {
       );
     },
   };
+
+  private async disconnectRelays(): Promise<void> {
+    await this.rpc.disconnectRelays();
+  }
 
   private async request(method: string, params: any[], opts?: RequestOpts): Promise<any> {
     const target = this.getTarget()
