@@ -131,7 +131,7 @@ export class Connect {
   }: {
     secretKey: string;
     target?: string;
-    relay?: string;
+    relay: string;
   }) {
     this.rpc = new NostrRPC({ relay, secretKey });
     if (target) {
@@ -140,6 +140,7 @@ export class Connect {
   }
 
   async init() {
+    await this.rpc.initRelayConnection();
     const sub = await this.rpc.listen();
     sub.on('event', async (event: Event) => {
       let payload;
