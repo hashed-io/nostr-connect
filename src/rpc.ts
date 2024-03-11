@@ -29,15 +29,19 @@ export class NostrRPC {
   relayCallConnection: Relay | undefined;
   relayListenConnection: Relay | undefined;
 
-  constructor(opts: { relay?: string; secretKey: string }) {
-    this.relay = opts.relay || 'wss://nostr.vulpem.com';
+  constructor(opts: { relay: string; secretKey: string }) {
+    this.relay = opts.relay
     this.self = {
       pubkey: getPublicKey(opts.secretKey),
       secret: opts.secretKey,
     };
     this.relayCallConnection = undefined;
     this.relayListenConnection = undefined;
+  }
 
+  async initRelayConnection() {
+    this.relayCallConnection = await connectToRelay(this.relay);
+    this.relayListenConnection = await connectToRelay(this.relay);
   }
 
   async call(
